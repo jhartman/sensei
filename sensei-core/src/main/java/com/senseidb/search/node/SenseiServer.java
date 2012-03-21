@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.management.StandardMBean;
 
+import com.sensei.search.req.protobuf.*;
 import org.apache.log4j.Logger;
 import org.mortbay.jetty.Server;
 
@@ -167,12 +168,28 @@ public class SenseiServer {
     AbstractSenseiCoreService mapReduceSenseiCoreService = new MapReduceSenseiService(_core);
     // create the zookeeper cluster client
 //    SenseiClusterClientImpl senseiClusterClient = new SenseiClusterClientImpl(clusterName, zookeeperURL, zookeeperTimeout, false);
+
     SenseiCoreServiceMessageHandler senseiMsgHandler =  new SenseiCoreServiceMessageHandler(coreSenseiService);
     SenseiCoreServiceMessageHandler senseiSysMsgHandler =  new SenseiCoreServiceMessageHandler(sysSenseiCoreService);
     SenseiCoreServiceMessageHandler mapReduceMsgHandler =  new SenseiCoreServiceMessageHandler(mapReduceSenseiCoreService);
+
     _networkServer.registerHandler(senseiMsgHandler, coreSenseiService.getSerializer());
     _networkServer.registerHandler(senseiSysMsgHandler, sysSenseiCoreService.getSerializer());
     _networkServer.registerHandler(mapReduceMsgHandler, mapReduceSenseiCoreService.getSerializer());
+
+    /* Add in alternate handlers */
+    SenseiReqProtoSerializer reqSerializer1 = new SenseiReqProtoSerializer(
+        SenseiRequestBPO.Request.getDescriptor().getName(), SenseiResultBPO.Result.getDescriptor().getName());
+
+    SenseiReqProtoSerializer sysReqSerializer1 = new SenseiReqProtoSerializer(
+        SenseiSysRequestBPO.SysRequest.getDescriptor().getName(), SenseiSysResultBPO.SysResult.getDescriptor().getName());
+
+    SenseiReqProtoSerializer sysReqSerializer2 = new SenseiReqProtoSerializer(
+        SenseiSysRequestBPO.getDescriptor().getName(), SenseiSysResultBPO.getDescriptor().getName());
+
+    _networkServer.registerHandler(senseiMsgHandler, reqSerializer1);
+    _networkServer.registerHandler(senseiSysMsgHandler, sysReqSerializer1);
+    _networkServer.registerHandler(senseiSysMsgHandler, sysReqSerializer2);
 
     _networkServer.registerHandler(senseiMsgHandler, CoreSenseiServiceImpl.JAVA_SERIALIZER);
     _networkServer.registerHandler(senseiSysMsgHandler, SysSenseiCoreServiceImpl.JAVA_SERIALIZER);

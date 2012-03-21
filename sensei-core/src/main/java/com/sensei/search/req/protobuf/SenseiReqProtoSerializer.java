@@ -8,13 +8,27 @@ import com.senseidb.search.req.SenseiRequest;
 import com.senseidb.search.req.SenseiResult;
 
 public class SenseiReqProtoSerializer implements Serializer<SenseiRequest, SenseiResult> {
-	public String requestName() {
-		return SenseiRequestBPO.Request.getDescriptor().getName();
-	}
+  private final String requestName;
+  private final String responseName;
 
-	public String responseName() {
-		return SenseiResultBPO.Result.getDescriptor().getName();
-	}
+  public SenseiReqProtoSerializer(String requestName, String responseName) {
+    this.requestName = requestName;
+    this.responseName = responseName;
+  }
+
+  public SenseiReqProtoSerializer() {
+    this(null, null);
+  }
+
+  public String requestName() {
+    if(requestName != null) return requestName;
+    return SenseiRequestBPO.Request.getDescriptor().getFullName();
+  }
+
+  public String responseName() {
+    if(responseName != null) return responseName;
+    return SenseiResultBPO.Result.getDescriptor().getFullName();
+  }
 
 	public byte[] requestToBytes(SenseiRequest request) {
 		return SenseiRequestBPO.Request.newBuilder().setVal(serialize(request)).build().toByteArray();
