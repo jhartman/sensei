@@ -1,5 +1,6 @@
 package com.senseidb.svc.impl;
 
+import com.senseidb.search.req.SenseiRequestJsonSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,11 +46,11 @@ import com.yammer.metrics.core.Timer;
 import static com.senseidb.servlet.SenseiSearchServletParams.PARAM_RESULT_HIT_UID;
 
 public class CoreSenseiServiceImpl extends AbstractSenseiCoreService<SenseiRequest, SenseiResult> {
-	public static final Serializer<SenseiRequest, SenseiResult> JAVA_SERIALIZER =
-			JavaSerializer.apply("SenseiRequest", SenseiRequest.class, SenseiResult.class);
+  public static final Serializer<SenseiRequest, SenseiResult> JAVA_SERIALIZER =
+      JavaSerializer.apply("SenseiRequest", SenseiRequest.class, SenseiResult.class);
 
-	public static final Serializer<SenseiRequest, SenseiResult> PROTO_SERIALIZER =
-			new SenseiReqProtoSerializer();
+  public static final Serializer<SenseiRequest, SenseiResult> JSON_SERIALIZER =
+			new SenseiRequestJsonSerializer();
 
 	private static final Logger logger = Logger.getLogger(CoreSenseiServiceImpl.class);
 	
@@ -277,6 +278,6 @@ public class CoreSenseiServiceImpl extends AbstractSenseiCoreService<SenseiReque
 
 	@Override
 	public Serializer<SenseiRequest, SenseiResult> getSerializer() {
-		 return PROTO_SERIALIZER;
+		 return JAVA_SERIALIZER;
 	}
 }
