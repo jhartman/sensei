@@ -40,7 +40,7 @@ public class VirtualGroupIdFactory implements SenseiPluginFactory<VirtualSimpleF
     public Object fetch(BoboIndexReader reader, int doc)
     {
       FacetDataCache dataCache = (FacetDataCache)reader.getFacetData("groupid");
-      long ret =  (Long) dataCache.valArray.getRawValue(dataCache.orderArray.get(doc));
+      long ret =  (Long) dataCache.getRawValue(dataCache.getOrderArrayValue(doc));
       if (ret < 0) ret *= -1;
       return ret;
     }

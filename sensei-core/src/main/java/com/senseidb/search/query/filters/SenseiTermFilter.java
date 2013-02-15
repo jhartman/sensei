@@ -136,7 +136,7 @@ public class SenseiTermFilter extends Filter {
         obj = facetHandler.getFacetData(boboReader);
         if (_noAutoOptimize && obj!=null && obj instanceof FacetDataCache){
           FacetDataCache facetData = (FacetDataCache)obj;
-          TermValueList valArray = facetData.valArray;
+          TermValueList valArray = facetData.getValArray();
           // copy vals
           ArrayList<String> validVals = new ArrayList<String>(_vals.length);
           for (String val : _vals){

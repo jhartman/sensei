@@ -1,5 +1,6 @@
 package com.senseidb.search.relevance.impl;
 
+import com.browseengine.bobo.facets.data.TermDoubleList;
 import it.unimi.dsi.fastutil.floats.FloatOpenHashSet;
 
 import java.util.Set;
@@ -26,24 +27,12 @@ public class MFacetFloat extends MFacet
     throw new UnsupportedOperationException("not implemented yet");
   }
   
-  @Override
-  public boolean containsAny(Object set)
-  {
-    FloatOpenHashSet setFloat = (FloatOpenHashSet)set;
-    for(int i=0; i< this._length; i++)
-      if( setFloat.contains(((TermFloatList) _mTermList).getPrimitiveValue(_buf[i])) )
-        return true;
-              
-    return false;
-  }
-  
   public boolean contains(float target)
   {
-    for(int i=0; i< this._length; i++)
-      if(((TermFloatList) _mTermList).getPrimitiveValue(_buf[i]) == target)
-        return true;
-              
-    return false;
+      TermFloatList list = (TermFloatList) _mTermList;
+      int index = list.indexOf(target);
+      return index >= 0 && _mDataCaches.contains(_id, index);
+
   }
 
 }

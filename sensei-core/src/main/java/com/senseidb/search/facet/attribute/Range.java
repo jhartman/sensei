@@ -21,11 +21,11 @@ public class Range {
   }
     
     public static Range getRange(MultiValueFacetDataCache cache, String val, char separator) {
-      int start = cache.valArray.indexOf(val + separator);
+      int start = cache.getValArray().indexOf(val + separator);
       if (start < 0) {
         start = (-1)*start - 1;
       }
-      int end = cache.valArray.indexOf(val + (char) (separator + 1));
+      int end = cache.getValArray().indexOf(val + (char) (separator + 1));
       if (end < 0) {
         end = (-1)*end - 1;
       }

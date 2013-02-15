@@ -49,7 +49,7 @@ public class BrokerConfig {
     staleRequestTimeoutMins = senseiConf.getInt(SenseiConfigServletContextListener.SENSEI_CONF_NC_STALE_TIMEOUT_MINS, 10);
     staleRequestCleanupFrequencyMins = senseiConf.getInt(SenseiConfigServletContextListener.SENSEI_CONF_NC_STALE_CLEANUP_FREQ_MINS, 10);
     allowPartialMerge = senseiConf.getBoolean(SenseiConfParams.ALLOW_PARTIAL_MERGE, true); 
-    brokerTimeout = senseiConf.getLong(SenseiConfParams.SERVER_BROKER_TIMEOUT, 8000); 
+    brokerTimeout = senseiConf.getLong(SenseiConfParams.SERVER_BROKER_TIMEOUT, 60000);
   }
 
   public void init() {

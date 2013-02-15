@@ -46,18 +46,15 @@ public class NullFilterConstructor extends FilterConstructor {
   }
   public final static class MultiValueFacetDocIdSetIterator extends FacetDocIdSetIterator
   {
-      private final BigNestedIntArray _nestedArray;
-
       public MultiValueFacetDocIdSetIterator(MultiValueFacetDataCache dataCache, int index) 
       {
           super(dataCache, index);
-          _nestedArray = dataCache._nestedArray;
       }
       
       @Override
       final public int nextDoc() throws IOException
       {
-        return (_doc = (_doc < _maxID ? _nestedArray.findValue(_index, (_doc + 1), _maxID, true) : NO_MORE_DOCS));
+        return (_doc = (_doc < _maxID ? ((MultiValueFacetDataCache) dataCache).findValue(_index, (_doc + 1), _maxID, true) : NO_MORE_DOCS));
       }
 
       @Override
@@ -65,7 +62,7 @@ public class NullFilterConstructor extends FilterConstructor {
       {
         if(_doc < id)
         {
-          return (_doc = (id <= _maxID ? _nestedArray.findValue(_index, id, _maxID, true) : NO_MORE_DOCS));
+          return (_doc = (id <= _maxID ? ((MultiValueFacetDataCache) dataCache).findValue(_index, id, _maxID, true) : NO_MORE_DOCS));
         }
         return nextDoc();
       }

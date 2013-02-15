@@ -2,50 +2,38 @@ package com.senseidb.search.relevance.impl;
 
 import com.browseengine.bobo.facets.data.MultiValueFacetDataCache;
 import com.browseengine.bobo.facets.data.MultiValueWithWeightFacetDataCache;
+import com.browseengine.bobo.facets.data.TermShortList;
 import com.browseengine.bobo.facets.data.TermStringList;
+import org.apache.lucene.search.DocIdSetIterator;
 
 public class WeightedMFacetString extends MFacetString implements WeightedMFacet
 {
+    MultiValueWithWeightFacetDataCache _wmDataCaches;
+    public WeightedMFacetString(MultiValueFacetDataCache mDataCaches)
+    {
+        super(mDataCaches);
 
-  public WeightedMFacetString(MultiValueFacetDataCache mDataCaches)
-  {
-    super(mDataCaches);
-    
-    MultiValueWithWeightFacetDataCache wmDataCaches = (MultiValueWithWeightFacetDataCache) mDataCaches;
-    _weightArray = wmDataCaches._weightArray;
-    weightBuf = new int[1024];
-  }
+        _wmDataCaches = (MultiValueWithWeightFacetDataCache) mDataCaches;
+    }
 
-  @Override
-  public void refresh(int id)
-  {
-    _length = _nestedArray.getData(id, _buf);
-    _weightArray.getData(id, weightBuf);
-  }
 
-  public boolean hasWeight(String target){
-    
-    for(int i=0; i< this._length; i++)
-      if(((TermStringList) _mTermList).get(_buf[i]).equals(target))
-      {
-        _weight[0] = weightBuf[i];
-        return true;
-      }
-              
-    return false;
-  }
+    @Override
+    public int getWeight()
+    {
+        return _weight;
+    }
 
-  @Override
-  public int getWeight()
-  {
-    return _weight[0];
-  }
-  
-  public int getWeight(String target)
-  {
-    if(hasWeight(target))
-      return _weight[0];
-    else
-      return Integer.MIN_VALUE;
-  }
+    public boolean hasWeight(String target){
+        return getWeight(target) >= 0;
+    }
+
+    public int getWeight(String target)
+    {
+        TermStringList intList = (TermStringList) _mTermList;
+        int index = intList.indexOf(target);
+
+        _weight = _wmDataCaches.getWeightForValue(_id, index, Integer.MIN_VALUE);
+//        System.out.println("The weight is " + _weight + " for target " + target);
+        return _weight;
+    }
 }

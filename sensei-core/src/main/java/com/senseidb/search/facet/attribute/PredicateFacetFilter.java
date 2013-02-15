@@ -32,11 +32,11 @@ public class PredicateFacetFilter extends RandomAccessFilter {
         if (!facetPredicate.evaluateValue(facetDataCache, i)) {
           continue;
         }
-        if (startDocIdTemp > facetDataCache.minIDs[i]) {
-          startDocIdTemp = facetDataCache.minIDs[i];
+        if (startDocIdTemp > facetDataCache.getMinId(i)) {
+          startDocIdTemp = facetDataCache.getMinId(i);
         }
-        if (endDocIdTemp < facetDataCache.maxIDs[i]) {
-          endDocIdTemp = facetDataCache.maxIDs[i];
+        if (endDocIdTemp < facetDataCache.getMaxId(i)) {
+          endDocIdTemp = facetDataCache.getMaxId(i);
         }
       }
     } 
@@ -63,7 +63,6 @@ public class PredicateFacetFilter extends RandomAccessFilter {
   @Override
   public double getFacetSelectivity(BoboIndexReader reader) {  
     FacetDataCache dataCache = dataCacheBuilder.build(reader);
-    int[] frequencies = dataCache.freqs;
     double selectivity = 0;
     int accumFreq = 0;
     int total = reader.maxDoc();  
@@ -71,7 +70,7 @@ public class PredicateFacetFilter extends RandomAccessFilter {
       if (!facetPredicate.evaluateValue(dataCache, i)) {
         continue;
       }
-      accumFreq += frequencies[i];      
+      accumFreq += dataCache.getFreq(i);
     }
     selectivity = (double) accumFreq / (double) total;
     if (selectivity > 0.999) {

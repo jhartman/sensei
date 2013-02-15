@@ -55,10 +55,10 @@ public class TimeBasedIndexSelector implements SenseiIndexPruner, SenseiPlugin {
           throw new IllegalStateException("Couldn't extract the facet data cache for the facet - " + facetName);
         }
         FacetDataCache facetDataCache= (FacetDataCache)reader.getFacetData(facetName);
-        if (!(facetDataCache.valArray instanceof TermLongList)) {
+        if (!(facetDataCache.getValArray() instanceof TermLongList)) {
           throw new IllegalStateException("Currently only the long field is supported for the time facet - " + facetName);
         }
-        long[] elements = ((TermLongList)facetDataCache.valArray).getElements();
+        long[] elements = ((TermLongList)facetDataCache.getValArray()).getElements();
         if (elements.length < 2) {
           filteredReadersCount.inc();          
           return false;

@@ -1,5 +1,6 @@
 package com.senseidb.search.relevance.impl;
 
+import com.browseengine.bobo.facets.data.TermLongList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import java.util.Set;
@@ -25,25 +26,14 @@ public class MFacetString extends MFacet
   {
     throw new UnsupportedOperationException("not implemented yet");
   }
-  
-  @Override
-  public boolean containsAny(Object set)
-  {
-    ObjectOpenHashSet setString = (ObjectOpenHashSet)set;
-    for(int i=0; i< this._length; i++)
-      if( setString.contains(((TermStringList) _mTermList).get(_buf[i])) )
-        return true;
-              
-    return false;
-  }
-  
+
   public boolean contains(String target)
   {
-    for(int i=0; i< this._length; i++)
-      if(((TermStringList) _mTermList).get(_buf[i]).equals(target))
-        return true;
-              
-    return false;
+      TermStringList list = (TermStringList) _mTermList;
+      int index = list.indexOf(target);
+      boolean contained = index >= 0 && _mDataCaches.contains(_id, index);
+      System.out.println("Contained " + target + " is " + contained);
+      return contained;
   }
   
 }

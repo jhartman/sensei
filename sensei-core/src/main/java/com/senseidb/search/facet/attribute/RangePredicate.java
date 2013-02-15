@@ -17,7 +17,7 @@ public class RangePredicate implements  FacetPredicate {
     }    
     lastDataCache = (MultiValueFacetDataCache) cache;   
     range = Range.getRange(lastDataCache, value, separator);   
-    buffer = new int[lastDataCache._nestedArray.getMaxItems()];
+    buffer = new int[lastDataCache.getNestedArraySize()];
     return range;
   }  
   
@@ -31,7 +31,7 @@ public class RangePredicate implements  FacetPredicate {
     if (cache != lastDataCache) {
       getRange(cache);
     }
-   return lastDataCache._nestedArray.containsValueInRange(docId, range.start, range.end);
+   return lastDataCache.containsValueInRange(docId, range.start, range.end);
   }
 
   @Override

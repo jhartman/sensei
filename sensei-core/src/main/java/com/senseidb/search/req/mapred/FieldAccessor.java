@@ -77,7 +77,7 @@ public final class FieldAccessor  {
       return getArray(fieldName, docId);
     }
     if (valueCache != null) {
-      return valueCache.valArray.getRawValue(valueCache.orderArray.get(docId));
+        return valueCache.getRawValue(valueCache.getOrderArrayValue(docId));
     }
     return getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId);
   }
@@ -101,10 +101,10 @@ public final class FieldAccessor  {
   public final long getLong(String fieldName, int docId) {
     FacetDataCache valueCache = getValueCache(fieldName);    
     if (valueCache != null) {
-      if (valueCache.valArray instanceof TermLongList) {
-        return ((TermLongList) valueCache.valArray).getPrimitiveValue(valueCache.orderArray.get(docId));
+      if (valueCache.getValArray() instanceof TermLongList) {
+        return ((TermLongList) valueCache.getValArray()).getPrimitiveValue(valueCache.getOrderArrayValue(docId));
       } else {
-        return (long)((TermNumberList) valueCache.valArray).getDoubleValue(valueCache.orderArray.get(docId));
+        return (long)((TermNumberList) valueCache.getValArray()).getDoubleValue(valueCache.getOrderArrayValue(docId));
       }
     } else {
       Object value = getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId)[0];
@@ -130,7 +130,7 @@ public final class FieldAccessor  {
   public final double getDouble(String fieldName, int docId) {
     FacetDataCache valueCache = getValueCache(fieldName);    
     if (valueCache != null) {
-      return ((TermNumberList) valueCache.valArray).getDoubleValue(valueCache.orderArray.get(docId));
+      return ((TermNumberList) valueCache.getValArray()).getDoubleValue(valueCache.getOrderArrayValue(docId));
     } else {
       Object value = getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId)[0];
       if (value instanceof Double) {
@@ -155,10 +155,10 @@ public final class FieldAccessor  {
   public final short getShort(String fieldName, int docId) {
     FacetDataCache valueCache = getValueCache(fieldName);   
     if (valueCache != null) {
-      if (valueCache.valArray instanceof TermShortList) {
-        return ((TermShortList) valueCache.valArray).getPrimitiveValue(valueCache.orderArray.get(docId));
+      if (valueCache.getValArray() instanceof TermShortList) {
+        return ((TermShortList) valueCache.getValArray()).getPrimitiveValue(valueCache.getOrderArrayValue(docId));
       } else {
-        return (short)((TermNumberList) valueCache.valArray).getDoubleValue(valueCache.orderArray.get(docId));
+        return (short)((TermNumberList) valueCache.getValArray()).getDoubleValue(valueCache.getOrderArrayValue(docId));
       }
     } else {
       Object value = getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId)[0];
@@ -184,10 +184,10 @@ public final class FieldAccessor  {
   public final int getInteger(String fieldName, int docId) {
     FacetDataCache valueCache = getValueCache(fieldName);    
     if (valueCache != null) {
-      if (valueCache.valArray instanceof TermIntList) {
-        return ((TermIntList) valueCache.valArray).getPrimitiveValue(valueCache.orderArray.get(docId));
+      if (valueCache.getValArray() instanceof TermIntList) {
+        return ((TermIntList) valueCache.getValArray()).getPrimitiveValue(valueCache.getOrderArrayValue(docId));
       } else {
-        return (int)((TermNumberList) valueCache.valArray).getDoubleValue(valueCache.orderArray.get(docId));
+        return (int)((TermNumberList) valueCache.getValArray()).getDoubleValue(valueCache.getOrderArrayValue(docId));
       }
     } else {
       Object value = getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId)[0];
@@ -213,10 +213,10 @@ public final class FieldAccessor  {
   public final float getFloat(String fieldName, int docId) {
     FacetDataCache valueCache = getValueCache(fieldName);    
     if (valueCache != null) {
-      if (valueCache.valArray instanceof TermFloatList) {
-        return ((TermFloatList) valueCache.valArray).getPrimitiveValue(valueCache.orderArray.get(docId));
+      if (valueCache.getValArray() instanceof TermFloatList) {
+        return ((TermFloatList) valueCache.getValArray()).getPrimitiveValue(valueCache.getOrderArrayValue(docId));
       } else {
-        return (float)((TermNumberList) valueCache.valArray).getDoubleValue(valueCache.orderArray.get(docId));
+        return (float)((TermNumberList) valueCache.getValArray()).getDoubleValue(valueCache.getOrderArrayValue(docId));
       }
     } else {
       Object value = getFacetHandler(fieldName).getRawFieldValues(boboIndexReader, docId)[0];
@@ -281,7 +281,7 @@ public final class FieldAccessor  {
      if (valueCache == null) {
        return null;
      }
-     return valueCache.valArray;
+     return valueCache.getValArray();
   }
   private String lastFacetHandlerName;
   private FacetHandler lastFacetHandler;

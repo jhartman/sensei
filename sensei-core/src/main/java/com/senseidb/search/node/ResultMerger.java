@@ -1032,7 +1032,7 @@ public class ResultMerger
             {
               for (;; ++j)
               {
-                rawGroupValue = dataCaches[j].valArray.getRawValue(dataCaches[j].orderArray.get(tmpScoreDoc.doc));
+                rawGroupValue = dataCaches[j].getValArray().getRawValue(dataCaches[j].getOrderArrayValue(tmpScoreDoc.doc));
 
                 rawGroupValue = extractRawGroupValue(rawGroupValueType, j,
                     primitiveLongArrayWrapperTmp, rawGroupValue);
@@ -1379,7 +1379,7 @@ public class ResultMerger
                 for (j=0; j<sortCollector.groupByMulti.length; ++j)
                 {
                   rawGroupValue = extractRawGroupValue(rawGroupValueType, j, primitiveLongArrayWrapperTmp,
-                      dataCaches[j].valArray.getRawValue(dataCaches[j].orderArray.get(doc)));
+                      dataCaches[j].getValArray().getRawValue(dataCaches[j].getOrderArrayValue(doc)));
 
                   hitWithGroupQueue = groupMaps[j].get(rawGroupValue);
                   if (hitWithGroupQueue != null)
@@ -1412,8 +1412,8 @@ public class ResultMerger
                         tmpScoreDoc.distinctValues[k] = extractRawGroupValue(distinctValueType,
                                                                              k,
                                                                              distinctPrimitiveLongArrayWrapperTmp,
-                                                                             distinctDataCaches[k].valArray.getRawValue(
-                                                                               distinctDataCaches[k].orderArray.get(doc)
+                                                                             distinctDataCaches[k].getValArray().getRawValue(
+                                                                               distinctDataCaches[k].getOrderArrayValue(doc)
                                                                              ));
                         if (pre == null)
                           pre = hitWithGroupQueue.distinctMap[k].get(tmpScoreDoc.distinctValues[k]);

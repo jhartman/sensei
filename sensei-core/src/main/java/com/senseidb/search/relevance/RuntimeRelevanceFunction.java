@@ -22,7 +22,6 @@ import com.browseengine.bobo.facets.data.TermLongList;
 import com.browseengine.bobo.facets.data.TermShortList;
 import com.browseengine.bobo.facets.data.TermStringList;
 import com.browseengine.bobo.facets.data.TermValueList;
-import com.browseengine.bobo.util.BigSegmentedArray;
 import com.senseidb.indexing.activity.facet.ActivityRangeFacetHandler;
 import com.senseidb.search.query.ScoreAugmentQuery.ScoreAugmentFunction;
 import com.senseidb.search.relevance.impl.CompilationHelper;
@@ -53,9 +52,10 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
   
   
   //index reader level data;
-  private BigSegmentedArray[] _orderArrays;
+//  private BigSegmentedArray[] _orderArrays;
   private TermValueList[] _termLists;
   
+  private FacetDataCache[] _dataCaches;
   private MultiValueFacetDataCache[] _mDataCaches;
   private TermValueList[] _mTermLists;
   
@@ -110,7 +110,8 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
     
     // (1) normal facet;
     int numFacet = _dt.hm_symbol_facet.keySet().size();
-    final BigSegmentedArray[] orderArrays = new BigSegmentedArray[numFacet];
+//    final BigSegmentedArray[] orderArrays = new BigSegmentedArray[numFacet];
+    _dataCaches = new FacetDataCache[numFacet];
     final TermValueList[] termLists = new TermValueList[numFacet];
     
     Iterator<String> iter_facet = _dt.hm_facet_index.keySet().iterator();
@@ -123,8 +124,9 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
         throw new IllegalArgumentException("Facet " + facetName + " does not have a valid FacetDataCache.");
       
       int index = _dt.hm_facet_index.get(facetName);
-      orderArrays[index] = ((FacetDataCache)(boboReader.getFacetData(facetName))).orderArray;
-      termLists[index] = ((FacetDataCache)(boboReader.getFacetData(facetName))).valArray;
+      _dataCaches[index] = ((FacetDataCache) boboReader.getFacetData(facetName));
+//      orderArrays[index] = ((FacetDataCache)(boboReader.getFacetData(facetName))).orderArray;
+//      termLists[index] = ((FacetDataCache)(boboReader.getFacetData(facetName))).getValArray();
     }
 
     // (2) multi-facet;
@@ -143,7 +145,7 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
       
       int index = _dt.hm_mfacet_index.get(mFacetName);
       mDataCaches[index] = (MultiValueFacetDataCache)(boboReader.getFacetData(mFacetName));
-      mTermLists[index] = ((MultiValueFacetDataCache)(boboReader.getFacetData(mFacetName))).valArray;
+      mTermLists[index] = ((MultiValueFacetDataCache)(boboReader.getFacetData(mFacetName))).getValArray();
     }
     
     // (3) activity engine facet;
@@ -180,7 +182,7 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
     updateArrayIndex(_dt, paramSize, types, facetIndex, arrayIndex, mFacetIndex, mArrayIndex, aFacetIndex);
     
     _cModel = cModel;
-    _orderArrays = orderArrays;
+//    _orderArrays = orderArrays;
     _termLists = termLists;
     _types = types;
     _facetIndex = facetIndex;
@@ -516,78 +518,96 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
     for(int j=0; j < dynamicAR.length; j++)
     {
       
-      // only when the parameter is inner score variable or facet variable, we need to update the score function input parameter arrays; 
-      switch (_types[dynamicAR[j]]) {
+      // only when the parameter is inner score variable or facet variable, we need to update the score function input parameter arrays;
+
+        int dynamicAr = dynamicAR[j];
+
+        int facetIndex = _facetIndex[dynamicAr];
+
+        switch (_types[dynamicAr]) {
       
         case RelevanceJSONConstants.TYPENUMBER_INNER_SCORE:  
-                  floats[_arrayIndex[dynamicAR[j]]] = innerScore;
+                  floats[_arrayIndex[dynamicAr]] = innerScore;
                   break;
         
         // normal facet;          
-        case RelevanceJSONConstants.TYPENUMBER_FACET_INT:  
-                  ints[_arrayIndex[dynamicAR[j]]] = ((TermIntList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
-                  break;
+        case RelevanceJSONConstants.TYPENUMBER_FACET_INT:
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            ints[_arrayIndex[dynamicAr]] = ((TermIntList) termList).getPrimitiveValue(orderArrayValue);
+            break;}
         case RelevanceJSONConstants.TYPENUMBER_FACET_LONG:
-                  longs[_arrayIndex[dynamicAR[j]]] = ((TermLongList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            longs[_arrayIndex[dynamicAr]] = ((TermLongList) termList).getPrimitiveValue(orderArrayValue);
                   break;
-        case RelevanceJSONConstants.TYPENUMBER_FACET_DOUBLE:  
-                  doubles[_arrayIndex[dynamicAR[j]]] = ((TermDoubleList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
-                  break;
-        case RelevanceJSONConstants.TYPENUMBER_FACET_FLOAT: 
-                  floats[_arrayIndex[dynamicAR[j]]] = ((TermFloatList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
-                  break;
-        case RelevanceJSONConstants.TYPENUMBER_FACET_SHORT: 
-                  shorts[_arrayIndex[dynamicAR[j]]] = ((TermShortList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
-                  break;
+        }
+        case RelevanceJSONConstants.TYPENUMBER_FACET_DOUBLE:
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            doubles[_arrayIndex[dynamicAr]] = ((TermDoubleList) termList).getPrimitiveValue(orderArrayValue);
+                  break;  }
+        case RelevanceJSONConstants.TYPENUMBER_FACET_FLOAT:
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            floats[_arrayIndex[dynamicAr]] = ((TermFloatList) termList).getPrimitiveValue(orderArrayValue);
+                  break;    }
+        case RelevanceJSONConstants.TYPENUMBER_FACET_SHORT:
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            shorts[_arrayIndex[dynamicAr]] = ((TermShortList) termList).getPrimitiveValue(orderArrayValue);
+                  break;}
         case RelevanceJSONConstants.TYPENUMBER_FACET_STRING:
-                  strings[_arrayIndex[dynamicAR[j]]] = ((TermStringList)_termLists[_facetIndex[dynamicAR[j]]]).get(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
-                  break;
+        {int orderArrayValue = _dataCaches[facetIndex].getOrderArrayValue(docID);
+            TermValueList termList = _dataCaches[facetIndex].getValArray();
+            strings[_arrayIndex[dynamicAr]] = ((TermStringList) termList).get(orderArrayValue);
+                  break;}
                   
         // multi-facet below;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_INT:
-                  mFacetInts[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetInts[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_LONG:
-                  mFacetLongs[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetLongs[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_DOUBLE:
-                  mFacetDoubles[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetDoubles[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_FLOAT:
-                  mFacetFloats[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetFloats[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_SHORT:
-                  mFacetShorts[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetShorts[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_M_STRING:
-                  mFacetStrings[_mArrayIndex[dynamicAR[j]]].refresh(docID);
+                  mFacetStrings[_mArrayIndex[dynamicAr]].refresh(docID);
                   break;
 
                   
         // weighted multi-facet below;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_INT:
-                  ((WeightedMFacetInt)mFacetInts[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetInt)mFacetInts[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_LONG:
-                  ((WeightedMFacetLong)mFacetLongs[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetLong)mFacetLongs[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_DOUBLE:
-                  ((WeightedMFacetDouble)mFacetDoubles[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetDouble)mFacetDoubles[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_FLOAT:
-                  ((WeightedMFacetFloat)mFacetFloats[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetFloat)mFacetFloats[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_SHORT:
-                  ((WeightedMFacetShort)mFacetShorts[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetShort)mFacetShorts[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_WM_STRING:
-                  ((WeightedMFacetString)mFacetStrings[_mArrayIndex[dynamicAR[j]]]).refresh(docID);
+                  ((WeightedMFacetString)mFacetStrings[_mArrayIndex[dynamicAr]]).refresh(docID);
                   break;
                         
                   
         // activity engine facet;
         case RelevanceJSONConstants.TYPENUMBER_FACET_A_INT:
-                  ints[_arrayIndex[dynamicAR[j]]] = _aHandlers[_aFacetIndex[dynamicAR[j]]].getIntActivityValue((int[])_aData[_aFacetIndex[dynamicAR[j]]], docID);
+                  ints[_arrayIndex[dynamicAr]] = _aHandlers[_aFacetIndex[dynamicAr]].getIntActivityValue((int[])_aData[_aFacetIndex[dynamicAr]], docID);
                   break;
           
         default: 
@@ -608,24 +628,26 @@ public class RuntimeRelevanceFunction extends CustomRelevanceFunction
     {
       
       // only when the parameter is inner score variable or facet variable, we need to update the score function input parameter arrays; 
-      switch (_types[dynamicAR[j]]) {
+        TermValueList termList = _dataCaches[_facetIndex[dynamicAR[j]]].getValArray();
+        int orderArrayValue = _dataCaches[_facetIndex[dynamicAR[j]]].getOrderArrayValue(docID);
+        switch (_types[dynamicAR[j]]) {
         case RelevanceJSONConstants.TYPENUMBER_FACET_INT:  
-                  ints[_arrayIndex[dynamicAR[j]]] = ((TermIntList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  ints[_arrayIndex[dynamicAR[j]]] = ((TermIntList) termList).getPrimitiveValue(orderArrayValue);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_LONG:
-                  longs[_arrayIndex[dynamicAR[j]]] = ((TermLongList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  longs[_arrayIndex[dynamicAR[j]]] = ((TermLongList) termList).getPrimitiveValue(orderArrayValue);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_DOUBLE:  
-                  doubles[_arrayIndex[dynamicAR[j]]] = ((TermDoubleList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  doubles[_arrayIndex[dynamicAR[j]]] = ((TermDoubleList) termList).getPrimitiveValue(orderArrayValue);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_FLOAT: 
-                  floats[_arrayIndex[dynamicAR[j]]] = ((TermFloatList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  floats[_arrayIndex[dynamicAR[j]]] = ((TermFloatList) termList).getPrimitiveValue(orderArrayValue);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_SHORT: 
-                  shorts[_arrayIndex[dynamicAR[j]]] = ((TermShortList)_termLists[_facetIndex[dynamicAR[j]]]).getPrimitiveValue(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  shorts[_arrayIndex[dynamicAR[j]]] = ((TermShortList) termList).getPrimitiveValue(orderArrayValue);
                   break;
         case RelevanceJSONConstants.TYPENUMBER_FACET_STRING:
-                  strings[_arrayIndex[dynamicAR[j]]] = ((TermStringList)_termLists[_facetIndex[dynamicAR[j]]]).get(_orderArrays[_facetIndex[dynamicAR[j]]].get(docID));
+                  strings[_arrayIndex[dynamicAR[j]]] = ((TermStringList) termList).get(orderArrayValue);
                   break;
                   
         // multi-facet below;

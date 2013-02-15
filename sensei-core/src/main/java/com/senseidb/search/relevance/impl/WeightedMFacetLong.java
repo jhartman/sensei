@@ -2,50 +2,33 @@ package com.senseidb.search.relevance.impl;
 
 import com.browseengine.bobo.facets.data.MultiValueFacetDataCache;
 import com.browseengine.bobo.facets.data.MultiValueWithWeightFacetDataCache;
+import com.browseengine.bobo.facets.data.TermIntList;
 import com.browseengine.bobo.facets.data.TermLongList;
+import org.apache.lucene.search.DocIdSetIterator;
 
 public class WeightedMFacetLong extends MFacetLong implements WeightedMFacet
 {
+    MultiValueWithWeightFacetDataCache _wmDataCaches;
+    public WeightedMFacetLong(MultiValueFacetDataCache mDataCaches)
+    {
+        super(mDataCaches);
 
-  public WeightedMFacetLong(MultiValueFacetDataCache mDataCaches)
-  {
-    super(mDataCaches);
-    
-    MultiValueWithWeightFacetDataCache wmDataCaches = (MultiValueWithWeightFacetDataCache) mDataCaches;
-    _weightArray = wmDataCaches._weightArray;
-    weightBuf = new int[1024];
-  }
+        _wmDataCaches = (MultiValueWithWeightFacetDataCache) mDataCaches;
+    }
 
-  @Override
-  public void refresh(int id)
-  {
-    _length = _nestedArray.getData(id, _buf);
-    _weightArray.getData(id, weightBuf);
-  }
 
-  public boolean hasWeight(long target){
-    
-    for(int i=0; i< this._length; i++)
-      if(((TermLongList) _mTermList).getPrimitiveValue(_buf[i]) == target)
-      {
-        _weight[0] = weightBuf[i];
-        return true;
-      }
-              
-    return false;
-  }
+    @Override
+    public int getWeight()
+    {
+        return _weight;
+    }
 
-  @Override
-  public int getWeight()
-  {
-    return _weight[0];
-  }
-  
-  public int getWeight(long target)
-  {
-    if(hasWeight(target))
-      return _weight[0];
-    else
-      return Integer.MIN_VALUE;
-  }
+    public int getWeight(long target)
+    {
+        TermLongList intList = (TermLongList) _mTermList;
+        int index = intList.indexOf(target);
+
+        _weight = _wmDataCaches.getWeightForValue(_id, index, Integer.MIN_VALUE);
+        return _weight;
+    }
 }
